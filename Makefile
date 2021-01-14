@@ -1,47 +1,54 @@
-all: lib/libGRMustache7-iOS.a lib/libGRMustache7-MacOS.a include/GRMustache.h Reference
+all: lib/libGRMustache7.xcframework
 
-lib/libGRMustache7-iOS.a: build/GRMustache7-iOS/Release-iphoneos/libGRMustache7-iOS.a build/GRMustache7-iphonesimulator/Release-iphonesimulator/libGRMustache7-iOS.a build/GRMustache7-iphonesimulator-x86_64/Release-iphonesimulator/libGRMustache7-iOS.a
+lib/libGRMustache7.xcframework: build/archives/GRMustache7-iphoneos.xcarchive/Products/libGRMustache7-iOS.a \
+								build/archives/GRMustache7-iphonesimulator.xcarchive/Products/libGRMustache7-iOS.a \
+								build/archives/GRMustache7-maccatalyst.xcarchive/Products/libGRMustache7-iOS.a
 	mkdir -p lib
-	lipo -create \
-	  "build/GRMustache7-iphonesimulator/Release-iphonesimulator/libGRMustache7-iOS.a" \
-	  "build/GRMustache7-iphonesimulator-x86_64/Release-iphonesimulator/libGRMustache7-iOS.a" \
-	  "build/GRMustache7-iOS/Release-iphoneos/libGRMustache7-iOS.a" \
-	  -output "lib/libGRMustache7-iOS.a"
+	xcodebuild -create-xcframework \
+	  -library "build/archives/GRMustache7-iphonesimulator.xcarchive/Products/libGRMustache7-iOS.a" \
+	  -library "build/archives/GRMustache7-iphoneos.xcarchive/Products/libGRMustache7-iOS.a" \
+	  -library "build/archives/GRMustache7-maccatalyst.xcarchive/Products/libGRMustache7-iOS.a" \
+	  -output "lib/libGRMustache7.xcframework"
 
-lib/libGRMustache7-MacOS.a: build/MacOS/Release/libGRMustache7-MacOS.a
+
+lib/libGRMustache7-macOS.a: build/macOS/Release/libGRMustache7-macOS.a
 	mkdir -p lib
-	cp build/MacOS/Release/libGRMustache7-MacOS.a lib/libGRMustache7-MacOS.a
+	cp build/macOS/Release/libGRMustache7-macOS.a lib/libGRMustache7-macOS.a
 
-build/GRMustache7-iOS/Release-iphoneos/libGRMustache7-iOS.a:
-	xcodebuild -project src/GRMustache.xcodeproj \
-	           -target GRMustache7-iOS \
+build/archives/GRMustache7-iphoneos.xcarchive/Products/libGRMustache7-iOS.a:
+	xcodebuild archive -project src/GRMustache.xcodeproj \
+	           -scheme GRMustache7-iOS \
 	           -configuration Release \
-	           build SYMROOT=../build/GRMustache7-iOS
+			   -destination 'generic/platform=iOS' \
+			   -archivePath 'build/archives/GRMustache7-iphoneos' \
+	           SYMROOT=../build/GRMustache7-iOS SKIP_INSTALL=NO INSTALL_PATH='/'
 
-build/GRMustache7-iphonesimulator/Release-iphonesimulator/libGRMustache7-iOS.a:
-	xcodebuild -project src/GRMustache.xcodeproj \
-	           -target GRMustache7-iOS \
+build/archives/GRMustache7-maccatalyst.xcarchive/Products/libGRMustache7-iOS.a:
+	xcodebuild archive -project src/GRMustache.xcodeproj \
+	           -scheme GRMustache7-iOS \
 	           -configuration Release \
-	           -sdk iphonesimulator \
-	           -arch "i386" \
-	           build SYMROOT=../build/GRMustache7-iphonesimulator
+			   -destination 'platform=macOS,arch=x86_64,variant=Mac Catalyst' \
+			   -archivePath 'build/archives/GRMustache7-maccatalyst' \
+	           SYMROOT=../build/GRMustache7-maccatalyst SKIP_INSTALL=NO INSTALL_PATH='/'
 
-build/GRMustache7-iphonesimulator-x86_64/Release-iphonesimulator/libGRMustache7-iOS.a:
-	xcodebuild -project src/GRMustache.xcodeproj \
-	           -target GRMustache7-iOS \
+build/archives/GRMustache7-iphonesimulator.xcarchive/Products/libGRMustache7-iOS.a:
+	xcodebuild archive -project src/GRMustache.xcodeproj \
+	           -scheme GRMustache7-iOS \
 	           -configuration Release \
-	           -sdk iphonesimulator \
-	           -arch "x86_64" \
-	           build SYMROOT=../build/GRMustache7-iphonesimulator-x86_64
+			   -destination 'generic/platform=iOS Simulator' \
+			   -archivePath 'build/archives/GRMustache7-iphonesimulator' \
+	           SYMROOT=../build/GRMustache7-iphonesimulator SKIP_INSTALL=NO INSTALL_PATH='/'
                                                                                                                                     
-build/MacOS/Release/libGRMustache7-MacOS.a:
-	xcodebuild -project src/GRMustache.xcodeproj \
-	           -target GRMustache7-MacOS \
+build/macOS/Release/libGRMustache7-macOS.a:
+	xcodebuild archive -project src/GRMustache.xcodeproj \
+	           -scheme GRMustache7-MacOS \
 	           -configuration Release \
-	           build SYMROOT=../build/MacOS
+			   -destination 'generic/platform=macOS' \
+			   -archivePath 'build/archives/GRMustache7-macos' \
+	           SYMROOT=../build/macOS SKIP_INSTALL=NO INSTALL_PATH=''
 
-include/GRMustache.h: build/MacOS/Release/libGRMustache7-MacOS.a
-	cp -R build/MacOS/Release/include/GRMustache include
+include/GRMustache.h: build/macOS/Release/libGRMustache7-macOS.a
+	cp -R build/macOS/Release/include/GRMustache include
 
 Reference: include/GRMustache.h
 	# Appledoc does not parse availability macros: create a temporary directory
